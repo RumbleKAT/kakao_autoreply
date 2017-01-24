@@ -3,7 +3,6 @@ var app = express();
 var fs = require("fs");
 var http = require("http");
 var bodyParser = require('body-parser');
-var stringM  = require("string");
 var config = require('./config/config');
 
 app.use(bodyParser.json());
