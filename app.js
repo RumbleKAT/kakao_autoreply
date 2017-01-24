@@ -4,6 +4,7 @@ var fs = require("fs");
 var http = require("http");
 var bodyParser = require('body-parser');
 var stringM  = require("string");
+var port = process.env.PORT || '3000';
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
@@ -162,6 +163,6 @@ app.delete('/chat_room/:user_key',function(req, res){
 
 
 
-var server = app.listen(8080, function(){
-  console.log("Run at http://localhost:8080");
+var server = app.listen(port, function(){
+  console.log("Run at http://localhost:1337");
 });
