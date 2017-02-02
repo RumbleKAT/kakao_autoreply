@@ -4,6 +4,7 @@ var fs = require("fs");
 var http = require("http");
 var bodyParser = require('body-parser');
 var config = require('./config/config');
+var parseString = require('xml2js').parseString;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
@@ -58,60 +59,88 @@ app.post('/message',function(req, res){
       var a = "user_key"+user_key;
       var UK_Answer = users[a];
       var string = "text";
+      var bool = false;
 
       if(UK_Answer == user_key && type != "" && content != "") //
       {
         //데이터를 찾음
           fs.readFile( __dirname + "/data/message.json", 'utf8',  function(err, data){
             var messages = JSON.parse(data);
-            if( type =="buttons" && content == "사전찾기"){
-                messages["message"] = {"text" : "찾고 싶은 국어 단어를 찾아 주세요!"};
-                res.end(data);
-                return;
-
-            fs.writeFile(__dirname + "/data/message.json",
-    							 JSON.stringify(messages, null, '\t'), "utf8", function(err, data){
-    				})
-
-          }
-          else{
+            if( type =="buttons" && content == "우리말찾기"){
+                fs.readFile( __dirname + "/data/messagesearch.json", 'utf8',  function(err, data){
+                    res.end(data);
+                });
+            }
+           else if( type =="buttons" && content == "도움말"){
+                  fs.readFile( __dirname + "/data/messageinfo.json", 'utf8',  function(err, data){
+                      res.end(data);
+                  });
+            }
+          else
+          {
             fs.readFile( __dirname + "/../data/message.json", 'utf8', function (err, data) {
-              var url = "http://endic.naver.com/translateAPI.nhn?sLn=kr&_callback=window.__jindo2_callback+"+"."+"$2431&m=getTranslate&query="+encodeURIComponent(content)+"&sl=ko&tl=en";
-              //var url = "http://opendict.korean.go.kr/api/search?key=15A4C53F5510FE3CBAEE3C96291C2FEE&q="+ encodeURIComponent(content);
-              console.log(url);
-              var result = {};
-              var output = '';
+              var word = content.split(":");
 
-              http.get(url,function(web){
-                web.on('data',function(buffer){
-                //  res.write(buffer);
-                  output += buffer;
-                });
-                web.on('end',function(){
-                  var object = output.toString();
-                  var a = object.search("resultData");
-                  var b = object.indexOf("dir",a);
-                  output = object.slice(a+13,b-3);
-                  //res.end();
-                });
-                console.log("Request_user_key : "+ user_key);
-                console.log("Request_type : keyboard - "+ content);
+              if(word[0] == "단어")
+              {
+                console.log("단어 선택");
+                var url = "http://opendict.korean.go.kr/api/search?key=15A4C53F5510FE3CBAEE3C96291C2FEE&q="+ encodeURIComponent(word[1]);
+                console.log(url);
 
-                fs.readFile( __dirname + "/data/message.json", 'utf8',  function(err, data){
-                  var messages = JSON.parse(data);
-                  messages["message"] = {"text" : output };
-                  console.log("Send Ok!");
-                  fs.writeFile(__dirname + "/data/message.json",
-                         JSON.stringify(messages, null, '\t'), "utf8", function(err, data){
-                  })
-                  res.end(data);
-                  return;
-                })
-              })
+                var message = {};
+                var output = '';
+                var object = "";
 
-          })
+                http.get(url,function(web){
+                  web.on('data',function(buffer){
+                  //  res.write(buffer);
+                    output += buffer;
+                  });
+                  web.on('end',function(){
+                     object = output.toString();
+                     var s = "";
+                     parseString(output, function (err, result) {
+                        s = result["channel"]["item"]; //xml로 파싱한 상태
+                     });
+
+
+                    message["message"] = {"text" : s};
+                    res.json(message);
+
+                  });
+                })//http request
+              }
+
+              else if(word[0] == "문장")
+              {
+                console.log("문장 선택");
+
+                var url ="http://www.jobkorea.co.kr/Service/User/Tool/SpellCheckExecute?tBox="+ encodeURIComponent(word[1]);
+                console.log(url);
+
+                var message = {};
+                var output = '';
+                var object = "";
+
+                http.get(url,function(web){
+                  web.on('data',function(buffer){
+                  //  res.write(buffer);
+                    output += buffer;
+                  });
+                  web.on('end',function(){
+                     object = output.toString();
+                    var a = object.search("resultData");
+                    var b = object.indexOf("dir",a);
+                    object = object.slice(a+13,b-3);
+
+                    message["message"] = {"text" : object};
+                    res.json(message);
+                  });
+                })//http request
+              }
+            })
         }
-      })
+        })
     }
       else
       {

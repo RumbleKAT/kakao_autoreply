@@ -1,4 +1,5 @@
 {
 	"type" : "buttons",
-	"buttons" : ["사전찾기"]
+	"buttons" : ["우리말찾기"],
+	"buttons" : ["도움말"]
 }
