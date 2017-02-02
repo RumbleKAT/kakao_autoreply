@@ -99,12 +99,42 @@ app.post('/message',function(req, res){
                   web.on('end',function(){
                      object = output.toString();
                      var s = "";
-                     parseString(output, function (err, result) {
+                     parseString(object, function (err, result) {
                         s = result["channel"]["item"]; //xml로 파싱한 상태
                      });
+                    var string = JSON.stringify(s);
+                    var resultword = new Array(10);
+                    var resultde = new Array(10);
+                    var result = "";
+                    var a ="";
 
+                    while(a != -1)
+                  {
+                    var  i = 0;
+                    var word = string.search("word");
+                    a = word;
+                    var definition = string.search("definition");
 
-                    message["message"] = {"text" : s};
+                    var wordstart = string.indexOf("[",word);
+                    var wordend = string.indexOf("]",wordstart);
+                    var wordslice = string.slice(wordstart+2, wordend-1);
+                    resultword[i] = wordslice;
+
+                    string = string.replace("word","");
+                    string = string.replace(wordslice,"");
+
+                    var depstart = string.indexOf("[",definition);
+                    var depend = string.indexOf("]",depstart);
+                    var depslice = string.slice(depstart+2, depend-1);
+                    resultde[i] = depslice;
+
+                    string = string.replace("definition","");
+                    string = string.replace(depslice,"");
+                    result += "단어: " + resultword[0] + "\n" + "의미: " +resultde[0] + "\n";
+                    i++;
+                  }
+
+                    message["message"] = {"text" : result};
                     res.json(message);
 
                   });
@@ -129,9 +159,8 @@ app.post('/message',function(req, res){
                   });
                   web.on('end',function(){
                      object = output.toString();
-                    var a = object.search("resultData");
-                    var b = object.indexOf("dir",a);
-                    object = object.slice(a+13,b-3);
+                     var errorWordCount = object.search("errorWordCount");
+
 
                     message["message"] = {"text" : object};
                     res.json(message);
