@@ -6,8 +6,36 @@ var bodyParser = require('body-parser');
 var config = require('./config/config');
 var parseString = require('xml2js').parseString;
 
+var parse = require('xml-parser');
+var inspect = require('util').inspect;
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
+
+app.get('/weather',function(req,res){
+
+var request = require('request');
+var url = 'http://www.kweather.co.kr/air/data/api/air_1hr_all2.xml';
+var result = "";
+
+request({
+    url: url ,
+    method: 'GET'
+}, function (error, response, body) {
+
+  parseString(body, function (err, result) {
+     s = result["air"]["item_10001"]; //xml로 파싱한 상태
+     var string = JSON.stringify(s);
+     var first = string.search("pm10Value");
+     var end = string.indexOf(",",first);
+     result = string.slice(first+13, end-2);
+     console.log(result);
+     res.json(result);
+     return;
+  });
+
+});
+});
 
 app.get('/keyboard',function(req, res){
   fs.readFile( __dirname + "/data/" + "keyboard.json",'utf8',function(err,data){
@@ -78,8 +106,33 @@ app.post('/message',function(req, res){
             }
           else
           {
+
             fs.readFile( __dirname + "/../data/message.json", 'utf8', function (err, data) {
               var word = content.split(":");
+
+              console.log(word.length);
+              console.log("word: "+word[1]);
+
+              if(content.search(":") == -1)
+              {
+                var message = {};
+
+                var result = ":을 안붙이셨습니다. \n 양식에 맞게 :을 붙여주세요!"
+                message["message"] = {"text" : result};
+                res.json(message);
+              }
+
+              else if(word.length != 2 )
+              {
+                console.log(":을 하나 이상 더 붙이셨습니다. \n :을 하나만 붙여주세요!");
+                var message = {};
+
+                var result = ":을 하나 이상 더 붙이셨습니다. \n :을 하나만 붙여주세요!"
+                message["message"] = {"text" : result};
+                res.json(message);
+              }
+
+              else{
 
               if(word[0] == "단어")
               {
@@ -315,6 +368,7 @@ app.post('/message',function(req, res){
                   });
                 })//http request
               }
+            }
             })
         }
         })
