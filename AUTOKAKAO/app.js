@@ -4,10 +4,23 @@ var fs = require("fs");
 var http = require("http");
 var bodyParser = require('body-parser');
 var config = require('./config/config');
+var i18n  = require('i18n');
+var MsTranslator = require("mstranslator");
 var parseString = require('xml2js').parseString;
 
 var parse = require('xml-parser');
 var inspect = require('util').inspect;
+
+var client = new MsTranslator({
+  api_key : "789a9cf5936f46d8bcb8b7df0ce41324"
+},true);
+
+var params = {
+  text: 'How\'s it going?'
+  , from: 'en'
+  , to: 'ja'
+};
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
@@ -17,6 +30,10 @@ app.get('/weather',function(req,res){
 var request = require('request');
 var url = 'http://www.kweather.co.kr/air/data/api/air_1hr_all2.xml';
 var result = "";
+
+client.translate(params, function(err, data) {
+  console.log(data);
+});
 
 request({
     url: url ,
@@ -106,6 +123,10 @@ app.post('/message',function(req, res){
             }
           else
           {
+            i18n.configure({
+              locales: ["en", "ko", "zh" , "ja"],
+              defaultLocale: "en"
+            });
 
             fs.readFile( __dirname + "/../data/message.json", 'utf8', function (err, data) {
               var word = content.split(":");
