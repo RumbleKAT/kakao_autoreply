@@ -7,6 +7,8 @@ var config = require('./config/config');
 var i18n  = require('i18n');
 var MsTranslator = require("mstranslator");
 var parseString = require('xml2js').parseString;
+var langdetect  = require('langdetect');
+
 
 var parse = require('xml-parser');
 var inspect = require('util').inspect;
@@ -123,10 +125,6 @@ app.post('/message',function(req, res){
             }
           else
           {
-            i18n.configure({
-              locales: ["en", "ko", "zh" , "ja"],
-              defaultLocale: "en"
-            });
 
             fs.readFile( __dirname + "/../data/message.json", 'utf8', function (err, data) {
               var word = content.split(":");
@@ -138,9 +136,117 @@ app.post('/message',function(req, res){
               {
                 var message = {};
 
+                var ang = langdetect.detectOne(content);
+                console.log("content:" + content);
+                console.log("language:" + ang);
+
+                if(ang == "ja") //일본어를 선택할 시
+                {
+                  console.log("일본어 켜짐");
+
+                  var client_id = 'LMBXnR_gI9Y0rT00oP1J';
+                  var client_secret = 'XfZbFFsYOf';
+
+                  var api_url = 'https://openapi.naver.com/v1/language/translate';
+                  var request = require('request');
+                  var options = {
+                      url: api_url,
+                      form: {'source':'ja', 'target':'ko', 'text': content },
+                      headers: {'X-Naver-Client-Id':client_id, 'X-Naver-Client-Secret': client_secret}
+                  };
+                    request.post(options, function (error, response, body) {
+                      if (!error && response.statusCode == 200) {
+                        res.writeHead(200, {'Content-Type': 'text/json;charset=utf-8'});
+                        var a  = JSON.stringify(body);
+                        var find = a.search("translatedText");
+                        var start = a.indexOf( ":", find );
+                        var end  =  a.indexOf("}",start);
+                        var result = a.slice(start + 3, end -2);
+                        message ={};
+                        message["message"] = {"text" : result };
+                        var s = JSON.stringify(message);
+                        console.log(s);
+                        res.end(s);
+                        }
+                        else {
+                        res.status(response.statusCode).end();
+                        console.log('error = ' + response.statusCode);
+                        }
+                    });
+                }
+                else if(ang == "en") //영어를 선택할 시
+                {
+                  console.log("영어 켜짐");
+
+                  var client_id = 'LMBXnR_gI9Y0rT00oP1J';
+                  var client_secret = 'XfZbFFsYOf';
+
+                    var api_url = 'https://openapi.naver.com/v1/language/translate';
+                    var request = require('request');
+                    var options = {
+                      url: api_url,
+                      form: {'source':'en', 'target':'ko', 'text': content },
+                      headers: {'X-Naver-Client-Id':client_id, 'X-Naver-Client-Secret': client_secret}
+                    };
+                    request.post(options, function (error, response, body) {
+                      if (!error && response.statusCode == 200) {
+                        res.writeHead(200, {'Content-Type': 'text/json;charset=utf-8'});
+                        var a  = JSON.stringify(body);
+                        var find = a.search("translatedText");
+                        var start = a.indexOf( ":", find );
+                        var end  =  a.indexOf("}",start);
+                        var result = a.slice(start + 3, end -2);
+                          message ={};
+                          message["message"] = {"text" : result };
+                        var s = JSON.stringify(message);
+                        console.log(s);
+                        res.end(s);
+
+                      } else {
+                        res.status(response.statusCode).end();
+                        console.log('error = ' + response.statusCode);
+                  }
+                });
+              }
+                else if(ang == "zh-cn")
+                {
+                  console.log("중국어 간체 켜짐");
+
+                  var client_id = 'LMBXnR_gI9Y0rT00oP1J';
+                  var client_secret = 'XfZbFFsYOf';
+
+                  var api_url = 'https://openapi.naver.com/v1/language/translate';
+                  var request = require('request');
+                  var options = {
+                      url: api_url,
+                      form: {'source':'zh-cn', 'target':'ko', 'text': content },
+                      headers: {'X-Naver-Client-Id':client_id, 'X-Naver-Client-Secret': client_secret}
+                  };
+                  request.post(options, function (error, response, body) {
+                      if (!error && response.statusCode == 200) {
+                            res.writeHead(200, {'Content-Type': 'text/json;charset=utf-8'});
+                            var a  = JSON.stringify(body);
+                            var find = a.search("translatedText");
+                            var start = a.indexOf( ":", find );
+                            var end  =  a.indexOf("}",start);
+                            var result = a.slice(start + 3, end -2);
+                            message ={};
+                            message["message"] = {"text" : result };
+                            var s = JSON.stringify(message);
+                            console.log(s);
+                            res.end(s);
+
+                            } else {
+                            res.status(response.statusCode).end();
+                            console.log('error = ' + response.statusCode);
+                            }
+                        });
+                }
+                else{
                 var result = ":을 안붙이셨습니다. \n 양식에 맞게 :을 붙여주세요!"
                 message["message"] = {"text" : result};
                 res.json(message);
+                }
               }
 
               else if(word.length != 2 )
@@ -153,7 +259,6 @@ app.post('/message',function(req, res){
                 res.json(message);
               }
 
-              else{
 
               if(word[0] == "단어")
               {
@@ -247,9 +352,9 @@ app.post('/message',function(req, res){
                         })
                       })
               })
-            }
+             }
               else if(word[0] == "영한")
-              {
+               {
                 var url = "http://endic.naver.com/translateAPI.nhn?sLn=kr&_callback=window.__jindo2_callback+"+"."+"$2431&m=getTranslate&query="+encodeURIComponent(word[1])+"&sl=en&tl=ko";
                   console.log(url);
                   // var result = {};
@@ -280,7 +385,7 @@ app.post('/message',function(req, res){
                       })
                     })
               })
-            }
+             }
               else if (word[0] == "사전")
               {
                 var client_id = 'ImKP3ZrLsLwL6hBgVedd';
@@ -332,7 +437,7 @@ app.post('/message',function(req, res){
               }
 
               else if(word[0] == "문장")
-              {
+               {
                 console.log("문장 선택");
 
                 var url ="http://www.jobkorea.co.kr/Service/User/Tool/SpellCheckExecute?tBox="+ encodeURIComponent(word[1]);
@@ -389,8 +494,8 @@ app.post('/message',function(req, res){
                   });
                 })//http request
               }
-            }
-            })
+
+            });
         }
         })
     }
