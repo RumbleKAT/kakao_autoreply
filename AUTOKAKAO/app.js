@@ -9,6 +9,11 @@ var MsTranslator = require("mstranslator");
 var parseString = require('xml2js').parseString;
 var langdetect  = require('langdetect');
 
+var lanuageDect = require('languagedetect');
+
+
+
+
 
 var parse = require('xml-parser');
 var inspect = require('util').inspect;
@@ -136,11 +141,18 @@ app.post('/message',function(req, res){
               {
                 var message = {};
 
-                var ang = langdetect.detectOne(content);
-                console.log("content:" + content);
-                console.log("language:" + ang);
+              //  var ang = langdetect.detectOne(content);
+                var lng  = new lanuageDect();
+                var ang  = lng.detect(content,10);
 
-                if(ang == "ja") //일본어를 선택할 시
+                var sol = JSON.stringify(ang);
+
+                console.log(ang);
+
+                //console.log("content:" + content);
+                //console.log("language:" + ang);
+
+                if(sol.search("ja") != -1 ) //일본어를 선택할 시
                 {
                   console.log("일본어 켜짐");
 
@@ -169,12 +181,17 @@ app.post('/message',function(req, res){
                         res.end(s);
                         }
                         else {
-                        res.status(response.statusCode).end();
+                        //res.status(response.statusCode).end();
                         console.log('error = ' + response.statusCode);
+
+                        var result = ":을 안붙이셨습니다. \n 양식에 맞게 :을 붙여주세요!"
+                        message["message"] = {"text" : result};
+                        res.json(message);
+
                         }
                     });
                 }
-                else if(ang == "en") //영어를 선택할 시
+                else if(sol.search("en") != -1 ) //영어를 선택할 시
                 {
                   console.log("영어 켜짐");
 
@@ -203,45 +220,86 @@ app.post('/message',function(req, res){
                         res.end(s);
 
                       } else {
-                        res.status(response.statusCode).end();
+                        //res.status(response.statusCode).end();
                         console.log('error = ' + response.statusCode);
+
+                        var result = ":을 안붙이셨습니다. \n 양식에 맞게 :을 붙여주세요!"
+                        message["message"] = {"text" : result};
+                        res.json(message);
                   }
                 });
               }
-                else if(ang == "zh-cn")
+                else if(ang == "ko")
                 {
-                  console.log("중국어 간체 켜짐");
+                  console.log("한국어 단어 켜짐");
+                  console.log("단어 선택");
+                var url = "http://opendict.korean.go.kr/api/search?key=15A4C53F5510FE3CBAEE3C96291C2FEE&q="+ encodeURIComponent(content);
 
-                  var client_id = 'LMBXnR_gI9Y0rT00oP1J';
-                  var client_secret = 'XfZbFFsYOf';
+                console.log(url);
 
-                  var api_url = 'https://openapi.naver.com/v1/language/translate';
-                  var request = require('request');
-                  var options = {
-                      url: api_url,
-                      form: {'source':'zh-cn', 'target':'ko', 'text': content },
-                      headers: {'X-Naver-Client-Id':client_id, 'X-Naver-Client-Secret': client_secret}
-                  };
-                  request.post(options, function (error, response, body) {
-                      if (!error && response.statusCode == 200) {
-                            res.writeHead(200, {'Content-Type': 'text/json;charset=utf-8'});
-                            var a  = JSON.stringify(body);
-                            var find = a.search("translatedText");
-                            var start = a.indexOf( ":", find );
-                            var end  =  a.indexOf("}",start);
-                            var result = a.slice(start + 3, end -2);
-                            message ={};
-                            message["message"] = {"text" : result };
-                            var s = JSON.stringify(message);
-                            console.log(s);
-                            res.end(s);
+                var message = {};
+                var output = '';
+                var object = "";
 
-                            } else {
-                            res.status(response.statusCode).end();
-                            console.log('error = ' + response.statusCode);
-                            }
-                        });
-                }
+                http.get(url,function(web){
+                  web.on('data',function(buffer){
+                    output += buffer;
+                  });
+                  web.on('end',function(){
+                     object = output.toString();
+                     var s = "";
+                     parseString(object, function (err, result) {
+                        s = result["channel"]["item"]; //xml로 파싱한 상태
+                     });
+                     s = JSON.stringify(s);
+
+                    var resultword = new Array(10);
+                    var resultde = new Array(10);
+                    var result = "";
+                    var a = 0;
+
+                    if(s == undefined)
+                    {
+                      console.log(s);
+                      var message ={};
+                       message["message"] = {"text" : "데이터가 존재하지 않습니다."};
+                       res.json(message);
+                       return;
+                    }
+                  else{
+                    while(a != -1)
+                  {
+                    var  i = 0;
+                    var word = s.search("word");
+                    console.log(word);
+                    a = word;
+                    var definition = s.indexOf("definition");
+
+                    var wordstart = s.indexOf("[",word);
+                    var wordend = s.indexOf("]",wordstart);
+                    var wordslice = s.slice(wordstart+2, wordend-1);
+                    resultword[i] = wordslice;
+
+                    s = s.replace("word","");
+                    s = s.replace(wordslice,"");
+
+                    var depstart = s.indexOf("[",definition);
+                    var depend = s.indexOf("]",depstart);
+                    var depslice = s.slice(depstart+2, depend-1);
+                    resultde[i] = depslice;
+
+                    s = s.replace("definition","");
+                    s = s.replace(depslice,"");
+                    result += "단어: " + resultword[0] + "\n" + "의미: " +resultde[0] + "\n";
+                    i++;
+                  }
+                    var message ={};
+                    message["message"] = {"text" : result};
+                    res.json(message);
+                  }
+                });
+              });
+            }
                 else{
                 var result = ":을 안붙이셨습니다. \n 양식에 맞게 :을 붙여주세요!"
                 message["message"] = {"text" : result};
