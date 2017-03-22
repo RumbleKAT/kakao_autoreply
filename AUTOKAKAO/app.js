@@ -8,6 +8,11 @@ var i18n  = require('i18n');
 var MsTranslator = require("mstranslator");
 var parseString = require('xml2js').parseString;
 var langdetect  = require('langdetect');
+var extend = require("util-extend");
+var sortBy = require("sort-by");
+var by = require('sortby');
+var arraySort = require("array-sort");
+
 
 var lanuageDect = require('languagedetect');
 
@@ -68,6 +73,77 @@ app.get('/keyboard',function(req, res){
   })
 });
 
+app.get("/ranking",function(req,res)
+{
+  var result = [];
+  var object = {};
+  fs.readFile("userdata.json","utf8",function(err,data){
+    var userdata = JSON.parse(data);
+    var count  = Object.keys(userdata).length;
+
+    //console.log(parseInt("10"));
+
+    for(var i = 1 ; i<count+1;i++)
+    {
+      result[i-1] = userdata["count"+i];
+    }
+    console.log(arraySort(result,'user_SCORE'));
+    result = arraySort(result,'user_SCORE');
+
+    console.log("1등:" + result[count-1].user_ID); //1등
+
+    for(var i = 0 ; i<count ; i++)
+    {
+      console.log(count-i+"th:" + result[i].user_ID); //1등
+      object[count-i+"th"] = result[i].user_ID;
+    }
+    res.json(object);
+
+  });
+});
+
+
+
+
+
+app.get("/userdata",function(req,res){
+  var user_ID = req.param("user_ID");
+  var user_SCORE = req.param("user_SCORE");
+
+  var result = {};
+  fs.readFile("userdata.json","utf8",function(err,data){
+    //만약 userID가 일치 할 경우 덮어씌워야함
+    var userdata = JSON.parse(data); //userID와 같을 때
+    console.log("길이" + Object.keys(userdata).length);
+    var count  = Object.keys(userdata).length;
+
+    console.log(userdata["count"+count].user_ID);
+    //count = userdata[user_ID].count;
+
+    if(userdata["count"+count].user_ID != user_ID ) //인증을 거치지 않은 부분
+    {
+      ++count;
+      result["count"+count] = { "user_ID" : user_ID , "user_SCORE" : user_SCORE ,"count" : count};
+
+      var object  = extend(userdata,result);
+      console.log(object);
+
+      var writefile = JSON.stringify(object, null ,'\t');
+      fs.writeFile("userdata.json",writefile,"utf8",function(err,data){
+          result = 200;
+          res.json(result);
+          return;
+      });
+    }
+    else{
+      result["success"] = 0;
+      result["error"] = "EXISTED";
+      res.json(result);
+      return;
+    }
+});
+});
+
 
 app.post('/friend',function(req,res){
   var param = req.param('user_key');
@@ -99,6 +175,8 @@ app.post('/friend',function(req,res){
       }
     })
   });
+
+
 
 app.post('/message',function(req, res){
   var result = { };
