@@ -17,6 +17,7 @@ app.get('/keyboard',function(req, res){
   fs.readFile( "keyboard.json",'utf8',function(err,data){
     console.log(data);
     res.end(data);
+    return;
   });
 });
 
@@ -24,8 +25,14 @@ app.get('/keyboard',function(req, res){
 app.post('/friend',function(req,res){
   var param = req.param('user_key');
   var result = { };
-
-
+  /*
+    setTimeout(function(){
+        var message ={};
+         message["message"] = {"text" : "응답속도가 지연되고 있습니다. 다시한번 입력해주세요!" };
+         res.json(message);
+         return;
+      },3000);
+    */
 
   fs.readFile( "friend.json",'utf8',function(err,data){
       var users = JSON.parse(data);
@@ -69,9 +76,20 @@ app.post('/message',function(req, res){
       if(UK_Answer == user_key && type == "text" && content != "")
       {
         //데이터를 찾음
-             fs.readFile( "/message.json", 'utf8', function (err, data) {
-             var word = content.split(":");
-             console.log(content);
+            var word = content.split(":");
+
+            fs.readFile("log.json","utf8",function(err,data){
+            var before = JSON.parse(data);
+            var log = {};
+            log["log" + content ] = content;
+
+            log = extend(before,log);
+
+            var writefile = JSON.stringify(log, null ,'\t');
+
+            fs.writeFile( "log.json" , writefile ,"utf8",function(err,data){
+            }); //save log
+           });
              var ang;
               console.log(content.search(":"));
               if(content.search(":") == -1)
@@ -105,12 +123,13 @@ app.post('/message',function(req, res){
                      count = 1;
                      error["errnum"+count] = { "content " : content };
                      var writefile = JSON.stringify(error, null ,'\t');
+
                      fs.writeFile( "error.json" , writefile ,"utf8",function(err,data){
-                          var message ={};
-                         message["message"] = {"text" : "찾고 싶은 단어가 초성으로만 이루어질 때 결과가 호출되지 않습니다." };
-                         res.json(message);
+                      //    var message ={};
+                      //   message["message"] = {"text" : "찾고 싶은 단어가 초성으로만 이루어질 때 결과가 호출되지 않습니다." };
+                      //   res.json(message);
                       });
-                    return;
+
                    }
 
                    else{
@@ -121,11 +140,11 @@ app.post('/message',function(req, res){
                      object  = extend(err,error);
 
                        fs.writeFile( "error.json" , JSON.stringify(object, null ,'\t') ,"utf8",function(err,data){
-                          var message ={};
-                         message["message"] = {"text" : "찾고 싶은 단어가 초성으로만 이루어질 때 결과가 호출되지 않습니다." };
-                         res.json(message);
+                         // var message ={};
+                        // message["message"] = {"text" : "찾고 싶은 단어가 초성으로만 이루어질 때 결과가 호출되지 않습니다." };
+                        // res.json(message);
                       });
-                    return;
+
                    }
 
                     });
@@ -221,7 +240,7 @@ app.post('/message',function(req, res){
                 });
               }
 
-              else if(ang == "ko") //국어
+              else if(ang == "ko")
                 {
                   console.log("한국어 단어 켜짐");
                   console.log("단어 선택");
@@ -355,7 +374,6 @@ app.post('/message',function(req, res){
                   else{
                     while(a != -1)
                   {
-                    var  i = 0;
                     var word = s.search("word");
                     console.log(word);
                     a = word;
@@ -364,7 +382,7 @@ app.post('/message',function(req, res){
                     var wordstart = s.indexOf("[",word);
                     var wordend = s.indexOf("]",wordstart);
                     var wordslice = s.slice(wordstart+2, wordend-1);
-                    resultword[i] = wordslice;
+                    resultword = wordslice;
 
                     s = s.replace("word","");
                     s = s.replace(wordslice,"");
@@ -372,12 +390,11 @@ app.post('/message',function(req, res){
                     var depstart = s.indexOf("[",definition);
                     var depend = s.indexOf("]",depstart);
                     var depslice = s.slice(depstart+2, depend-1);
-                    resultde[i] = depslice;
+                    resultde = depslice;
 
                     s = s.replace("definition","");
                     s = s.replace(depslice,"");
-                    result += "단어: " + resultword[0] + "\n" + "의미: " +resultde[0] + "\n";
-                    i++;
+                    result += "단어: " + resultword + "\n" + "의미: " +resultde + "\n";
                   }
                     var message ={};
                     message["message"] = {"text" : result};
@@ -660,18 +677,22 @@ app.post('/message',function(req, res){
                   if (!error && response.statusCode == 200) {
                     res.writeHead(200, {'Content-Type': 'text/json;charset=utf-8'});
                     var a  = JSON.parse(body);
-                     title = a.items[0].title;
-                     description = a.items[0].description;
-                     link = a.items[0].link;
-
-                     result = "내용: " + description + '\n' + "링크: " + link ;
-                     console.log(result);
-
+                     try{
+                      title = a.items[0].title;
+                      description = a.items[0].description;
+                      link = a.items[0].link;
+                      result = "내용: " + description + '\n' + "링크: " + link ;
+                      console.log(result);
+                    }
+                    catch(exception){
+                      result = "결과가 존재하지 않습니다.";
+                    }
+                    finally{
                      message ={};
                      message["message"] = {"text" : result };
                      var s = JSON.stringify(message);
-
                      res.end(s);
+                    }
                   }
                     else {
                       res.status(response.statusCode).end();
@@ -750,13 +771,13 @@ app.post('/message',function(req, res){
               }
               */
               }
-        });//fs
 
       }
       else
      {
+        var result ={};
         console.log("Wrong data");
-        result["error"] = "WRONG DATA";
+        result["message"] = {"text" : "에러 발생! 우리말 도우미는 문자형식만 지원합니다. \n 기타 사진 등과 같은 파일 형식은 지원하지 않습니다."};
         res.json(result);
         return;
      }
@@ -786,6 +807,7 @@ app.delete('/friend',function(req,res){
           }
 
           else{
+            var result = { };
             result["Failure"] = 0;
             result["error"] = "Not Found";
             res.json(result);
