@@ -13,7 +13,7 @@ module.exports = function(app){
             try {
                 temp = JSON.parse(param);
             } catch (Exception) {
-                res.status(200).end('There is no items!');
+                temp = 'There is no items!';
             }
             res.status(200).json(temp);
         });
@@ -33,21 +33,16 @@ module.exports = function(app){
     });
 
     app.delete('/friend',function(req,res){
-        /*
-        fs.readFile('./Forms/myFriends.json', 'utf8', function (err, data) {
-            
-            var findCheck = temp.some(element => {
-                if (element['user_key'] == req.body['user_key']) {
-                    return true;
-                }
-        
-                if (findCheck) {
-                    
-
-                    res.status(200).json({ 'message': '정상 응답' });
-                }
-            });
-        */
+        dirManager.get('myFriends',function(data){
+            if (dirManager.find(req.body["user_key"], data, "user_key")){
+                let list = dirManager.remove(data, req.body["user_key"]);
+                dirManager.set('myFriends',list, function(){
+                    res.status(200).json({ message: "Found & Delete complete!" });
+                });
+            }else{
+                res.status(200).json({ message: "Not Found" });
+            }
+        });
     });
 
     app.post('/message',function(req,res){
