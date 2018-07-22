@@ -20,18 +20,16 @@ module.exports = function(app){
     })
 
     app.post('/friend',function(req,res){
-        promise.resolve(true)
-            .then(dirManager.get('myFriends', function (param) {
-                if (dirManager.find(req.body['user_key'], param, 'user_key')) {
-                    console.log('Found one!');
-                    res.status(200).json({ 'message': '정상 응답' });
-                } else {
-                    temp.push({ user_key: req.body["user_key"] });
-                    dirManager.set('myFriends', param, function (res) {
-                        res.status(200).json({ 'message': '정상 응답' });
-                    })
-                }
-            }))
+        dirManager.get('myFriends', function (data) {
+            if (!dirManager.find(req.body["user_key"], data, "user_key")) {
+                data.push({ user_key: req.body["user_key"] });
+                dirManager.set("myFriends", data, function(res) {
+                    res.status(200).json({ message: "정상 응답" });
+                });
+            } else {
+              res.status(200).json({ message: "정상 응답" });
+            }
+        })
     });
 
     app.delete('/friend',function(req,res){

@@ -26,7 +26,7 @@ module.exports =  (function(){
     }
 
     function setDatas(type, data, callback){
-        fs.writeFile(setPath(type), JSON.stringify(data),function(){
+        fs.writeFile(setPath(type), JSON.stringify(data),function(err,data){
             if(err) return err;
             callback(param);
         });
