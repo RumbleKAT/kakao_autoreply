@@ -24,16 +24,21 @@ module.exports = (function(){
         return url;
     }
 
+    let keys = ['type', 'cat', 'definition', 'origin'];
+
     function http_request(method , url , option){
         if(method === 'GET'){
             request.get(url,function(err,data,body){
                 var a = parser(body);
                 a.forEach(element => {
-                    console.log(element);
-                    console.log(element['sense'][0]);
-                    console.log(Array.isArray(element['sense'][0]['definition'])); //Array 일 경우 예외처리
+                    let result = [];
+                    Object.keys(element['sense'][0]).forEach(function(key){
+                        if (keys.includes(key)){
+                            result.push(Object.assign({}, { [key]: element["sense"][0][key][0] }));
+                        }                       
+                    });
+                    return result;
                 })
-                console.log(a[0]['sense'][0]['definition'][0]);
             });
         }else if(method === 'POST'){
 

@@ -25,7 +25,6 @@ module.exports =  (function(){
         fs.readFile(setPath(type),'utf8',function(err,data){
             if(err) return err;
             else{
-                console.log(JSON.parse(data));
                 let temp = JSON.parse(data);
                 callback(temp);
             }

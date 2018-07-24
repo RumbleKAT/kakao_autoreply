@@ -23,7 +23,7 @@ module.exports = function(app){
         dirManager.get('myFriends', function (data) {
             if (!dirManager.find(req.body["user_key"], data, "user_key")) {
                 data.push({ user_key: req.body["user_key"] });
-                dirManager.set("myFriends", data, function(res) {
+                dirManager.set("myFriends", data, function() {
                     res.status(200).json({ message: "정상 응답" });
                 });
             } else {
