@@ -4,7 +4,7 @@ module.exports =  (function(){
     this.keyboard = './Forms/keyboard.json';
     this.myFriends = './Forms/myFriends.json';
 
-    function remove(array, element) {        
+    function remove(array, element) {
         let list = array.filter(obj => {
             return obj['user_key'] != element;
         });

@@ -1,7 +1,4 @@
-var request = require('request');
-var parseString = require('xml2js').parseString;
-
-module.exports = (function(){
+module.exports = function(request, parseString){
     this.korean_search = 'http://opendict.korean.go.kr/api/search?key=${key}&q=${query}'
     this.korean_secret = '15A4C53F5510FE3CBAEE3C96291C2FEE';
 
@@ -24,7 +21,7 @@ module.exports = (function(){
         return url;
     }
 
-    function http_request(method , url , option){
+    function get(method , url , option){
         if(method === 'GET'){
             request.get(url,function(err,data,body){
                 var a = parser(body);
@@ -35,15 +32,13 @@ module.exports = (function(){
                 })
                 console.log(a[0]['sense'][0]['definition'][0]);
             });
-        }else if(method === 'POST'){
-
         }
     }
 
     return {
         get : function (type, method, query){
-            return http_request(method, bind(type, query));
+            return get(method, bind(type, query));
         }
     }
 
-})();
+};

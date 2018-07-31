@@ -1,8 +1,9 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-var app = express();
 var http = require('http');
-var httpRequest = require('./Routes/httpManager');
+var request = require('request');
+var app = express();
+var parseString = require('xml2js').parseString;
 
 const port = process.env.PORT || 8080;
 
@@ -14,11 +15,14 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Headers", "content-type");
     next();
 });
-var user = "";
 
-var routers = require('./Routes/routeManager')(app,user);
-httpRequest.get('korean','GET','국회의원');
+var routers = require('./Routes/routeManager')(app);
+var korean = require('./Routes/koreanManager')(request, parseString);
+var ortho = require('./Routes/orthoManager')(request, parseString);
 
+ortho.get('roman','대한민국',function(param){
+    console.log(param);
+});
 
 http.createServer(app).listen(port, function () {
     console.log('Express server listening on port '+ port);
