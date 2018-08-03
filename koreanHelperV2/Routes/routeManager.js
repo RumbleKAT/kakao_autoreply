@@ -3,6 +3,7 @@ var mongoose = require('mongoose');
 var dirManager = require('./dirManager');
 var promise = require('promise');
 
+
 module.exports = function(app){
     /*
      app이 지정된 위치를 기준으로 Fs
