@@ -41,7 +41,7 @@ module.exports = (function(){
                 })
             });
         }else if(method === 'POST'){
-            
+
         }
     }
 
