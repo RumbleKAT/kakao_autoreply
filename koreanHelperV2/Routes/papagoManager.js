@@ -6,18 +6,17 @@ module.exports = function(request){
     this.api_url = 'https://openapi.naver.com/v1/language/translate';
     this.langList = ['en', 'jp', 'zh-cn'];
 
-    function detect(param){
+    function detect(param, callback){
         let nation = langdetect.detectOne(param);
         var result = false;
         this.langList.forEach(function(element){
             if(element === nation){
                 result = true;
-                return nation;
+                callback(nation);
             }
         })
         if(!result){
-            //error handler
-            console.log('error');
+            callback('NaN');
         }
     }
 
@@ -43,11 +42,15 @@ module.exports = function(request){
     }
 
     return {
-        check : function(content){
-            return detect(content);
-        },
-        get: function(source , content, callback) {
-            return http_request(set_option(source, content), callback);
+        get: function(content, callback) {
+            detect(content,function(source){
+                if(source !== 'NaN'){
+                    return http_request(set_option(source, content), callback);
+                }else{
+                    console.log('error');
+                    //save it 
+                }
+            });
         } 
     };
 }

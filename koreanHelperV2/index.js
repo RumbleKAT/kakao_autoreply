@@ -21,6 +21,10 @@ var korean = require('./Routes/koreanManager')(request, parseString);
 var ortho = require('./Routes/orthoManager')(request, parseString);
 var papago = require('./Routes/papagoManager')(request);
 
+papago.get('How are you?', function(param){
+    console.log('result : ' + param);
+})
+
 http.createServer(app).listen(port, function () {
     console.log('Express server listening on port '+ port);
 });
