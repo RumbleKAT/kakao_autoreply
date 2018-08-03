@@ -4,7 +4,7 @@
   "description": "korean dictionary message chat bot",
   "main": "index.js",
   "scripts": {
-    "test": "node index.js"
+    "start": "node index.js"
   },
   "keywords": [
     "chatbot",
@@ -17,6 +17,8 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
+    "langdetect": "^0.2.1",
+    "languagedetect": "^1.1.1",
     "mongoose": "^5.2.4",
     "promise": "^8.0.1",
     "request": "^2.87.0",

@@ -21,25 +21,26 @@ module.exports = function(request, parseString){
         return url;
     }
 
-<<<<<<< HEAD:koreanHelperV2/Routes/httpManager.js
     let keys = ['type', 'cat', 'definition', 'origin'];
 
     function http_request(method , url , option){
-=======
-    function get(method , url , option){
->>>>>>> b532846b373d1fee88e7d06e52b28a07f17fb939:koreanHelperV2/Routes/koreanManager.js
         if(method === 'GET'){
-            request.get(url,function(err,data,body){
-                var a = parser(body);
-                a.forEach(element => {
-                    let result = [];
-                    Object.keys(element['sense'][0]).forEach(function(key){
-                        if (keys.includes(key)){
-                            result.push(Object.assign({}, { [key]: element["sense"][0][key][0] }));
-                        }                       
-                    });
-                    return result;
-                })
+            request.get(url, function (err, response,body){
+                if (response.statusCode === 200){
+                    var a = parser(body);
+                    a.forEach(element => {
+                        let result = [];
+                        Object.keys(element['sense'][0]).forEach(function(key){
+                            if (keys.includes(key)){
+                                result.push(Object.assign({}, { [key]: element["sense"][0][key][0] }));
+                            }                       
+                        });
+                        return result;
+                    })
+                }else{
+                    console.log(body); //save log...
+                    return 'Error'
+                }
             });
         }
     }

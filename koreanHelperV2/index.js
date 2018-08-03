@@ -19,10 +19,7 @@ app.use(function (req, res, next) {
 var routers = require('./Routes/routeManager')(app);
 var korean = require('./Routes/koreanManager')(request, parseString);
 var ortho = require('./Routes/orthoManager')(request, parseString);
-
-ortho.get('roman','대한민국',function(param){
-    console.log(param);
-});
+var papago = require('./Routes/papagoManager')(request);
 
 http.createServer(app).listen(port, function () {
     console.log('Express server listening on port '+ port);

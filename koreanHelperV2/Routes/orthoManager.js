@@ -26,22 +26,27 @@ module.exports = function(request, parseString){
             url: url,
             method: 'GET'
         }, function (error, response, body) {
-            parseString(body, function (err, result) {
-                if (err) return err;
-                result['response']['body'][0]['items'].forEach(element => {
-                    element['item'].forEach(obj => {
-                        var answer = [];
-                        answer.push(obj['title'][0]);
-                        if (type === 'roman') {
-                            answer.push(obj['roman'][0]);
-                        } else if (type === 'loan') {
-                            answer.push(obj['original'][0]);
-                            answer.push(obj['veriety'][0]);
-                        }
-                        callback(answer);
+            if (response.statusCode === 200){
+                parseString(body, function (err, result) {
+                    if (err) return err;
+                    result['response']['body'][0]['items'].forEach(element => {
+                        element['item'].forEach(obj => {
+                            var answer = [];
+                            answer.push(obj['title'][0]);
+                            if (type === 'roman') {
+                                answer.push(obj['roman'][0]);
+                            } else if (type === 'loan') {
+                                answer.push(obj['original'][0]);
+                                answer.push(obj['veriety'][0]);
+                            }
+                            callback(answer);
+                        });
                     });
                 });
-            });
+            }else{
+                console.log(body); //save log
+                callback("Error");
+            }
         });
     }
 
