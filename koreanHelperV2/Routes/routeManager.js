@@ -1,13 +1,11 @@
 var fs = require('fs');
-var mongoose = require('mongoose');
 var dirManager = require('./dirManager');
-var promise = require('promise');
 
-
-module.exports = function(app){
+module.exports = function(app,papago){
     /*
      app이 지정된 위치를 기준으로 Fs
     */
+   
     app.get('/keyboard',function(req , res){
         dirManager.get('keyboard', function (param) {
             let temp = '';

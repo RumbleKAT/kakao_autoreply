@@ -4,7 +4,8 @@ var http = require('http');
 var request = require('request');
 var app = express();
 var parseString = require('xml2js').parseString;
-
+var mongoose = require("mongoose");
+var dbManager = require("./Routes/DBManager")(mongoose);
 const port = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -16,15 +17,19 @@ app.use(function (req, res, next) {
     next();
 });
 
-var routers = require('./Routes/routeManager')(app);
-var korean = require('./Routes/koreanManager')(request, parseString);
-var ortho = require('./Routes/orthoManager')(request, parseString);
-var papago = require('./Routes/papagoManager')(request);
-
-papago.get('How are you?', function(param){
-    console.log('result : ' + param);
+new Promise(function (resolve, reject) {
+    console.log("DB setting...");
+    dbManager.set(function(){
+        resolve(true);
+    });
+}).then(function(){
+    var korean = require('./Routes/koreanManager')(request, parseString);
+    var ortho = require('./Routes/orthoManager')(request, parseString);
+    var papago = require('./Routes/papagoManager')(request);
+    var routers = require("./Routes/routeManager")(app);
 })
-
-http.createServer(app).listen(port, function () {
-    console.log('Express server listening on port '+ port);
-});
+.then(function(){
+    http.createServer(app).listen(port, function () {
+        console.log('Express server listening on port ' + port);
+    });  
+})
