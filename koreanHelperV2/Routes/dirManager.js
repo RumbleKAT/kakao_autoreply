@@ -31,8 +31,42 @@ module.exports =  (function(){
         })
     }
 
+    function updateDatas(type,user_key,status){
+        return new Promise((resolve) => {
+            fs.readFile(setPath(type), 'utf8', function(err, data){
+                if(!err){
+                    data = JSON.parse(data);
+                    data.some(user => {
+                        if(user['user_key'] == user_key){
+                            user["user_status"] = status;
+                        }
+                    });
+                    fs.writeFile(setPath(type),JSON.stringify(data),function(){
+                        resolve('success');
+                    });
+                }
+            });
+        });
+    };
+
+    function getUserStatus(type, user_key){
+        return new Promise((resolve) => {
+            fs.readFile(setPath(type), 'utf8', function (err, data) {
+                if (!err) {
+                    data = JSON.parse(data);
+                    data.some(user => {
+                        if (user['user_key'] == user_key) {
+                            resolve(user['user_status']);
+                        }
+                    });
+                }
+            });
+        });
+    }
+
     function setDatas(type, data, callback){
-        fs.writeFile(setPath(type), JSON.stringify(data),function(){
+        data = JSON.stringify(data);
+        fs.writeFile(setPath(type), data, function () {
             callback();
         });
     }
@@ -58,7 +92,12 @@ module.exports =  (function(){
         },
         remove: function(array, element){
             return remove(array, element);
+        },
+        updateStatus : function(type,user_key,status){
+            return updateDatas(type, user_key, status);            
+        },
+        getStatus: function (type, user_key){
+            return getUserStatus(type,user_key);
         }
     }
-
 })();

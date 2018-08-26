@@ -24,31 +24,29 @@ module.exports = function(request, parseString){
     let keys = ['type', 'cat', 'definition', 'origin'];
 
     function http_request(method , url , option){
-        if(method === 'GET'){
-            request.get(url, function (err, response,body){
-                if (response.statusCode === 200){
-                    var a = parser(body);
-                    a.forEach(element => {
-                        let result = [];
-                        Object.keys(element['sense'][0]).forEach(function(key){
-                            if (keys.includes(key)){
-                                result.push(Object.assign({}, { [key]: element["sense"][0][key][0] }));
-                            }                       
-                        });
-                        return result;
-                    })
-                }else{
-                    console.log(body); //save log...
-                    return 'Error'
-                }
-            });
-        }
+        return new Promise(function(resolve,reject){
+            if(method === 'GET'){
+                request.get(url, function (err, response,body){
+                    if (response.statusCode === 200){
+                        var a = parser(body);
+                        a.forEach(element => {
+                            let result = [];
+                            Object.keys(element['sense'][0]).forEach(function(key){
+                                if (keys.includes(key)){
+                                    result.push(Object.assign({}, { [key]: element["sense"][0][key][0] }));
+                                }                       
+                            });
+                            resolve(result);
+                        })
+                    }
+                });
+            }
+        });
     }
 
     return {
-        get : function (type, method, query){
-            return get(method, bind(type, query));
+        get : (type, method, query) => {
+            return http_request(method, bind(type, query));
         }
     }
-
 };

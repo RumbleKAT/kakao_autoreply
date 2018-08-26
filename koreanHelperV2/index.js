@@ -23,10 +23,15 @@ new Promise(function (resolve, reject) {
         resolve(true);
     });
 }).then(function(){
-    var korean = require('./Routes/koreanManager')(request, parseString);
-    var ortho = require('./Routes/orthoManager')(request, parseString);
-    var papago = require('./Routes/papagoManager')(request);
-    var routers = require("./Routes/routeManager")(app);
+    let korean = require('./Routes/koreanManager')(request, parseString);
+    let ortho = require('./Routes/orthoManager')(request, parseString);
+    let papago = require('./Routes/papagoManager')(request);
+    let options = {
+        "korean" : korean,
+        "ortho" : ortho,
+        "papago" : papago
+    }
+    let routers = require("./Routes/routeManager")(app,options);
 })
 .then(function(){
     http.createServer(app).listen(port, function () {

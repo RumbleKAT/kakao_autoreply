@@ -1,16 +1,15 @@
 var fs = require('fs');
 var dirManager = require('./dirManager');
 
-module.exports = function(app,papago){
+module.exports = function (app, options){
     /*
      app이 지정된 위치를 기준으로 Fs
-    */
-   
+     */  
     app.get('/keyboard',function(req , res){
         dirManager.get('keyboard', function (param) {
             let temp = '';
             try {
-                temp = JSON.parse(param);
+                temp = param;
             } catch (Exception) {
                 temp = 'There is no items!';
             }
@@ -21,7 +20,12 @@ module.exports = function(app,papago){
     app.post('/friend',function(req,res){
         dirManager.get('myFriends', function (data) {
             if (!dirManager.find(req.body["user_key"], data, "user_key")) {
-                data.push({ user_key: req.body["user_key"] });
+                data.push(
+                    { 
+                        user_key: req.body["user_key"],
+                        user_status : 0
+                    }
+                );
                 dirManager.set("myFriends", data, function() {
                     res.status(200).json({ message: "정상 응답" });
                 });
@@ -45,8 +49,145 @@ module.exports = function(app,papago){
     });
 
     app.post('/message',function(req,res){
-        console.log(req.body['user_key']);
-        res.status(200).json({ message: 'ok' });
-    });
+        dirManager.get('myFriends', function (data) {
+            let user_key = req.body["user_key"];
+            if (dirManager.find(user_key, data, "user_key")) {
 
+                if(req.body.type == "buttons"){
+                    if (req.body.content == "우리말 찾기") {
+                        //status
+                        let message = {
+                            "keyboard": {
+                                "type": "buttons",
+                                "buttons": [
+                                    "우리말 사전 찾기",
+                                    "로마자 표기법 찾기",
+                                    "외래어 표기법 찾기",
+                                    "영어|중어|일어 번역하기",
+                                    "이전으로"
+                                ]
+                            }
+                        }
+                        res.status(200).json(message);
+                    } else if (req.body.content == "우리말 사전 찾기"){
+                        dirManager.updateStatus("myFriends",user_key,1)
+                        .then(()=>{
+                            res.status(200).json({ "message" : "text" });
+                        });                        
+                    } else if (req.body.content == "로마자 표기법 찾기") {
+                        dirManager.updateStatus("myFriends", user_key, 2)
+                        .then(() => {
+                            res.status(200).json({ "message": "text" });
+                        });    
+                    } else if (req.body.content == "외래어 표기법 찾기") {
+                        dirManager.updateStatus("myFriends", user_key, 3)
+                        .then(() => {
+                            res.status(200).json({ "message": "text" });
+                        }); 
+                    } else if (req.body.content == "영어|중어|일어 번역하기") {
+                        dirManager.updateStatus("myFriends", user_key, 4)
+                        .then(() => {
+                            res.status(200).json({ "message": "text" });
+                        });
+                    } else if (req.body.content == "이전으로") {
+                        dirManager.updateStatus("myFriends", user_key, 0)
+                        .then(() => {
+                            res.redirect('/keyboard');
+                        });
+                    } else if (req.body.content == "우리말 도우미란?") {
+                        
+                    } else if (req.body.type == "buttons" && req.body.content == "공식 홈페이지") {
+                        res.redirect('https://www.naver.com'); //리디렉션
+                    }
+                } else if (req.body.type == "text"){
+                    dirManager.getStatus("myFriends",user_key)
+                    .then(user_status => {
+                        if (user_status === 1){
+                            options.korean.get('korean', 'GET', req.body.content)
+                            .then(result => {
+                                dirManager.updateStatus("myFriends", user_key, 0)
+                                .then(status => {
+                                    if(status === 'success'){
+                                        res.status(200).json({ "message": result });
+                                    }
+                                })
+                            });
+                        }else if(user_status === 2){
+                            //naver 
+                            options.ortho.get("roman",req.body.content)
+                            .then(answer => {
+                                console.log(answer);
+                            },()=>{
+                                console.log("err!");
+                                dirManager.updateStatus("myFriends", user_key, 0)
+                                    .then(status => {
+                                    if (status === 'success') {
+                                        res.status(200).json({
+                                            "text": "찾으시는 내용이 발견 되지 않습니다.",
+                                            "keyboard": {
+                                                "type": "buttons",
+                                                "buttons": [
+                                                    "우리말 찾기",
+                                                    "우리말 도우미란?",
+                                                    "공식 홈페이지"
+                                                ]
+                                            }
+                                        });
+                                    }
+                                })
+                            });
+                        }else if(user_status === 3){
+                            options.ortho.get("loan", req.body.content)
+                            .then(answer => {
+                                console.log(answer);
+
+                                },() => {
+                                dirManager.updateStatus("myFriends", user_key, 0)
+                                    .then(status => {
+                                        if (status === 'success') {
+                                            res.status(200).json({
+                                                "message" : {
+                                                    "text": "찾으시는 내용이 발견 되지 않습니다.",
+                                                },
+                                                "keyboard": {
+                                                    "type": "buttons",
+                                                    "buttons": [
+                                                        "우리말 찾기",
+                                                        "우리말 도우미란?",
+                                                        "공식 홈페이지"
+                                                    ]
+                                                }
+                                            });
+                                        }
+                                    })
+                                });
+                        }else if(user_status === 4){
+                            let text_response = undefined;
+                            options.papago.get(req.body.content)
+                            .then(result => {
+                                text_response = result;
+                                return text_response;
+                            },err =>{
+                                text_response = err;
+                                return text_response;
+                            })
+                            .then(text_response => {
+                                dirManager.updateStatus("myFriends", user_key, 0)
+                                .then(status => {
+                                    if (status === 'success') {
+                                        let message = { message: { text: text_response }, keyboard: { type: "buttons", buttons: ["우리말 사전 찾기", "로마자 표기법 찾기", "외래어 표기법 찾기", "영어|중어|일어 번역하기", "이전으로"] } };
+                                        res.status(200).json(message);
+                                    }
+                                })
+                            })
+                        }
+                    });
+                }
+            }else {
+                let message = {};
+                message["message"] = { "text": 'User is not Found!! \n' };
+                res.status(200).json(message);
+            }
+        });
+    });
 }

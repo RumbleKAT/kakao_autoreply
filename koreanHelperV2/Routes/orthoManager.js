@@ -21,7 +21,9 @@ module.exports = function(request, parseString){
         return url + queryParams;
     }
 
-    function get(url,type , callback){
+    function get(url,type){
+        console.log(url);
+        return new Promise(function(resolve,reject){
         request({
             url: url,
             method: 'GET'
@@ -29,30 +31,46 @@ module.exports = function(request, parseString){
             if (response.statusCode === 200){
                 parseString(body, function (err, result) {
                     if (err) return err;
+                    console.log(result["response"]["body"][0]["items"].le);
                     result['response']['body'][0]['items'].forEach(element => {
-                        element['item'].forEach(obj => {
+                        if(Array.isArray(element['item'])){
                             var answer = [];
-                            answer.push(obj['title'][0]);
-                            if (type === 'roman') {
-                                answer.push(obj['roman'][0]);
-                            } else if (type === 'loan') {
-                                answer.push(obj['original'][0]);
-                                answer.push(obj['veriety'][0]);
-                            }
-                            callback(answer);
-                        });
+                            element['item'].forEach(obj => {
+                                if (type === 'roman') {
+                                    answer.push({
+                                    "title": obj['title'][0],
+                                    "roman": obj['roman'][0]
+                                });
+                                } else if (type === 'loan') {
+                                    try{
+                                        answer.push({
+                                            "title": obj['title'][0],
+                                            "country": obj['country'][0],
+                                            "content": obj['content'][0],
+                                            "veriety": obj['veriety'][0]
+                                        });
+                                    }catch(Exception){
+                                        console.log(Exception);
+                                    }
+                                }
+                            });
+                            resolve(answer);
+                        }else{
+                            reject(true);
+                        }
                     });
-                });
+                })
             }else{
                 console.log(body); //save log
-                callback("Error");
+                reject(true);
             }
         });
+    });
     }
 
     return{
-        get : function (type, query,callback){
-            return get(setUrl(type,query),type,callback);
+        get : function (type, query){
+            return get(setUrl(type,query),type);
         }
     }
 }
