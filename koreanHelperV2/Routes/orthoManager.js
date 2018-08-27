@@ -31,7 +31,6 @@ module.exports = function(request, parseString){
             if (response.statusCode === 200){
                 parseString(body, function (err, result) {
                     if (err) return err;
-                    console.log(result["response"]["body"][0]["items"].le);
                     result['response']['body'][0]['items'].forEach(element => {
                         if(Array.isArray(element['item'])){
                             var answer = [];
@@ -42,16 +41,21 @@ module.exports = function(request, parseString){
                                     "roman": obj['roman'][0]
                                 });
                                 } else if (type === 'loan') {
-                                    try{
-                                        answer.push({
-                                            "title": obj['title'][0],
-                                            "country": obj['country'][0],
-                                            "content": obj['content'][0],
-                                            "veriety": obj['veriety'][0]
-                                        });
-                                    }catch(Exception){
-                                        console.log(Exception);
-                                    }
+
+                                    let key = Object.keys(obj);
+                                    let result = "";
+                                    key.forEach(element => {
+                                        if(element === 'title'){
+                                            result += "제목 : " + obj['title'][0] + '\n'
+                                        } if(element === 'country'){
+                                            result += "국가 : " + obj["country"][0] + "\n";
+                                        }else if(element === 'content'){
+                                            result += "내용 : " + obj["content"][0] + "\n";
+                                        }else if(element === 'veriety'){
+                                            result += "예시 : " + obj["veriety"][0] + "\n";
+                                        }
+                                    });
+                                    answer.push(result);
                                 }
                             });
                             resolve(answer);
@@ -61,7 +65,6 @@ module.exports = function(request, parseString){
                     });
                 })
             }else{
-                console.log(body); //save log
                 reject(true);
             }
         });

@@ -125,7 +125,20 @@ module.exports = function (app, options){
                                 dirManager.updateStatus("myFriends", user_key, 0)
                                 .then(status => {
                                     if(status === 'success'){
-                                        res.status(200).json({ "message": result });
+                                        let answer = ""
+                                        result.forEach(element => {
+                                            let key = Object.keys(element);
+                                            if (key[0] === 'cat'){
+                                                answer += '카테고리 : ' + element['cat'] + " \n"
+                                            } else if (key[0]  === 'type') {
+                                                answer += " 종 류  : " + element["type"] + " \n";
+                                            } else if (key[0]  === 'origin') {
+                                                answer += " 유 래  : " + element["origin"] + " \n";
+                                            } else if (key[0]  === 'definition'){
+                                                answer += " 뜻 풀이 : " + element["definition"] + " \n";
+                                            }
+                                        });
+                                        res.status(200).json({ "message": answer });
                                     }
                                 })
                             });
@@ -134,7 +147,7 @@ module.exports = function (app, options){
                             options.roman.get(req.body.content)
                             .then(answer => {
                                 let result = "";
-                                const map = answer.forEach(element => {
+                                answer.forEach(element => {
                                     result += '결과 : ' + element.name + '\n' + ' 정확도 : ' + element.score + '\n'
                                 })
                                 dirManager.updateStatus("myFriends", user_key, 0)
@@ -173,8 +186,21 @@ module.exports = function (app, options){
                         }else if(user_status === 3){
                             options.ortho.get("loan", req.body.content)
                             .then(answer => {
-                                console.log(answer);
-
+                                dirManager.updateStatus("myFriends", user_key, 0)
+                                    .then(status => {
+                                        if (status === 'success') {
+                                            res.status(200).json({
+                                                "text": answer.toString(),
+                                                "buttons": [
+                                                    "우리말 사전 찾기",
+                                                    "로마자 표기법 찾기",
+                                                    "외래어 표기법 찾기",
+                                                    "영어|중어|일어 번역하기",
+                                                    "이전으로"
+                                                ]
+                                            });
+                                        }
+                                    });
                                 },() => {
                                 dirManager.updateStatus("myFriends", user_key, 0)
                                     .then(status => {

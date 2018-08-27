@@ -1,13 +1,11 @@
 var langdetect = require("langdetect");
 
-
-
 module.exports = function(request){
     this.client_id = 'LMBXnR_gI9Y0rT00oP1J';
     this.client_secret = 'XfZbFFsYOf';
     this.api_url = 'https://openapi.naver.com/v1/language/translate';
     this.langList = ['en', 'ja', 'zh-cn'];
-
+    
     function getClient(){
         return Object.assign({},{'clientId' : this.client_id, 'clientSecret' : this.client_secret})
     }
@@ -39,6 +37,7 @@ module.exports = function(request){
     }
 
     function http_request(options,callback){
+        console.log(options);
         request.post(options, (err,response,body) => {
             if(!err && response.statusCode === 200){
                 let result = JSON.parse(body);
@@ -68,4 +67,4 @@ module.exports = function(request){
             return getClient();
         }
     };
-}
+};

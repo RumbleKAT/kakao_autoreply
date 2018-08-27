@@ -1,14 +1,15 @@
 module.exports = function(request){
-    this.client_id = 'lnBtCKQwLBho8tDJi4yB';
-    this.client_secret = "KwMvjhMcev";
-    this.api_url = "https://openapi.naver.com/v1/krdict/romanization?query=";
+    this.client_id_2 = 'lnBtCKQwLBho8tDJi4yB';
+    this.client_secret_2 = "KwMvjhMcev";
+    this.api_url_2 = "https://openapi.naver.com/v1/krdict/romanization?query=";
 
     function http_request(query) {
-        this.api_url += encodeURI(query);
+        this.api_url_2 += encodeURI(query);
         let options = {
-            url: this.api_url,
-            headers: { 'X-Naver-Client-Id': this.client_id, 'X-Naver-Client-Secret': this.client_secret }
+            url: this.api_url_2,
+            headers: { 'X-Naver-Client-Id': this.client_id_2, 'X-Naver-Client-Secret': this.client_secret_2 }
         }
+        console.log(this.api_url);
         return new Promise(function(resolve,reject){
             request.get(options, (err, response, body) => {
                 if (!err && response.statusCode === 200) {
@@ -20,11 +21,6 @@ module.exports = function(request){
             });
         });
     }
-    /*
-    [ { name: 'Song Myungjin', score: '99' },
-    { name: 'Song Myoungjin', score: '88' },
-    { name: 'Song Myeongjin', score: '64' } ]
-    */
 
     return {
         get: function(query){

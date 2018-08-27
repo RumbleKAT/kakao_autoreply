@@ -29,15 +29,15 @@ module.exports = function(request, parseString){
                 request.get(url, function (err, response,body){
                     if (response.statusCode === 200){
                         var a = parser(body);
+                        let result = [];
                         a.forEach(element => {
-                            let result = [];
                             Object.keys(element['sense'][0]).forEach(function(key){
                                 if (keys.includes(key)){
                                     result.push(Object.assign({}, { [key]: element["sense"][0][key][0] }));
                                 }                       
                             });
-                            resolve(result);
                         })
+                        resolve(result);
                     }
                 });
             }
