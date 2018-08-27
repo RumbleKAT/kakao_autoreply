@@ -5,16 +5,13 @@ module.exports = function(request){
 
     function http_request(query) {
         this.api_url += encodeURI(query);
-        console.log(this.api_url);
         let options = {
             url: this.api_url,
             headers: { 'X-Naver-Client-Id': this.client_id, 'X-Naver-Client-Secret': this.client_secret }
         }
         return new Promise(function(resolve,reject){
             request.get(options, (err, response, body) => {
-                console.log(response);
                 if (!err && response.statusCode === 200) {
-                    console.log(body);
                     let result = JSON.parse(body);
                     resolve(result);
                 } else {

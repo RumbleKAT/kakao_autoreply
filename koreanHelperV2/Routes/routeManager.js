@@ -52,7 +52,6 @@ module.exports = function (app, options){
         dirManager.get('myFriends', function (data) {
             let user_key = req.body["user_key"];
             if (dirManager.find(user_key, data, "user_key")) {
-
                 if(req.body.type == "buttons"){
                     if (req.body.content == "우리말 찾기") {
                         //status
@@ -95,7 +94,25 @@ module.exports = function (app, options){
                             res.redirect('/keyboard');
                         });
                     } else if (req.body.content == "우리말 도우미란?") {
-                        
+                        let message = {
+                            "message" : "우리말 도우미는 한글을 쓰면서 어려웠던 단어를 찾을 수 있는 국어사전 서비스와 \n 한글의 영문표기와 외래어 표기법 서비스 \n 영,중,일 한글 번역 서비스를 제공하는 챗봇 서비스입니다.",
+                            "photo" : {
+                                "url": "https://cdn2.iconfinder.com/data/icons/new-year-resolutions/64/resolutions-06-512.png",
+                                "width": 640,
+                                "height": 480
+                            },
+                            "message_button": {
+                                "label": "홈페이지로",
+                                "url": "https://www.naver.com"
+                            },
+                            "keyboard": {
+                                "type": "buttons",
+                                "buttons": [
+                                    "이전으로"
+                                ]
+                            }
+                        }
+                        res.status(200).json(message);
                     } else if (req.body.type == "buttons" && req.body.content == "공식 홈페이지") {
                         res.redirect('https://www.naver.com'); //리디렉션
                     }
@@ -114,11 +131,28 @@ module.exports = function (app, options){
                             });
                         }else if(user_status === 2){
                             //naver 
-                            options.ortho.get("roman",req.body.content)
+                            options.roman.get(req.body.content)
                             .then(answer => {
-                                console.log(answer);
+                                let result = "";
+                                const map = answer.forEach(element => {
+                                    result += '결과 : ' + element.name + '\n' + ' 정확도 : ' + element.score + '\n'
+                                })
+                                dirManager.updateStatus("myFriends", user_key, 0)
+                                    .then(status => {
+                                        if (status === 'success') {
+                                            res.status(200).json({
+                                                "text": result,
+                                                "buttons": [
+                                                    "우리말 사전 찾기",
+                                                    "로마자 표기법 찾기",
+                                                    "외래어 표기법 찾기",
+                                                    "영어|중어|일어 번역하기",
+                                                    "이전으로"
+                                                ]
+                                            });
+                                        }
+                                    });
                             },()=>{
-                                console.log("err!");
                                 dirManager.updateStatus("myFriends", user_key, 0)
                                     .then(status => {
                                     if (status === 'success') {
@@ -180,6 +214,8 @@ module.exports = function (app, options){
                                     }
                                 })
                             })
+                        }else if(user_status == 0 && req.body.content != ""){
+                            res.redirect('/keyboard');
                         }
                     });
                 }
