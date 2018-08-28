@@ -30,7 +30,7 @@ module.exports = function(request, parseString){
         }, function (error, response, body) {
             if (response.statusCode === 200){
                 parseString(body, function (err, result) {
-                    if (err) return err;
+                    if (err) return this.saveError(err);
                     result['response']['body'][0]['items'].forEach(element => {
                         if(Array.isArray(element['item'])){
                             var answer = [];
@@ -60,11 +60,13 @@ module.exports = function(request, parseString){
                             });
                             resolve(answer);
                         }else{
+                            this.saveError(error);
                             reject(true);
                         }
                     });
                 })
             }else{
+                this.saveError(error);
                 reject(true);
             }
         });

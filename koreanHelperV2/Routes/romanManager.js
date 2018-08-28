@@ -16,6 +16,7 @@ module.exports = function(request){
                     let result = JSON.parse(body);
                     resolve(result);
                 } else {
+                    this.saveError(err);
                     reject("err");
                 }
             });
@@ -28,6 +29,7 @@ module.exports = function(request){
             .then(result=>{
                 return result.aResult[0].aItems;
             },err =>{
+                this.saveError(err);
                 return '해당 데이터를 찾을 수 없습니다.';
             })
         }

@@ -1,11 +1,11 @@
-module.exports = function(request, parseString){
+module.exports = function(request, parseString,error){
     this.korean_search = 'http://opendict.korean.go.kr/api/search?key=${key}&q=${query}'
     this.korean_secret = '15A4C53F5510FE3CBAEE3C96291C2FEE';
-
+    
     function parser(content){
         let data = ''
         parseString(content,function(err,result){
-            if(err) return err;
+            if (err) return this.saveError(err);
             data = result['channel']['item'];
         });
         return data;
@@ -38,6 +38,9 @@ module.exports = function(request, parseString){
                             });
                         })
                         resolve(result);
+                    }else{
+                        reject('error');
+                        this.saveError(err);
                     }
                 });
             }
@@ -46,7 +49,7 @@ module.exports = function(request, parseString){
 
     return {
         get : (type, method, query) => {
-            return http_request(method, bind(type, query));
+            return http_request(method, bind(type, query))
         }
     }
 };

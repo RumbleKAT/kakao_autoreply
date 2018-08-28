@@ -5,7 +5,8 @@ var request = require('request');
 var app = express();
 var parseString = require('xml2js').parseString;
 var mongoose = require("mongoose");
-var dbManager = require("./Routes/DBManager")(mongoose);
+var error = require("./Models/error");
+var dbManager = require("./Routes/DBManager")(mongoose, error);
 const port = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,12 +20,10 @@ app.use(function (req, res, next) {
 
 new Promise(function (resolve, reject) {
     console.log("DB setting...");
-    /*
     dbManager.set(function(){
         resolve(true);
-    });*/
+    });
     resolve(true);
-
 }).then(function(){
     let korean = require('./Routes/koreanManager')(request, parseString);
     let ortho = require('./Routes/orthoManager')(request, parseString);

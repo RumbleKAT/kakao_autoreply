@@ -223,13 +223,13 @@ module.exports = function (app, options){
                                 });
                         }else if(user_status === 4){
                             let text_response = undefined;
-                            options.papago.get(req.body.content)
+                            options.papago.get(req.body.content, res, user_key)
                             .then(result => {
                                 text_response = result;
                                 return text_response;
                             },err =>{
                                 text_response = err;
-                                return text_response;
+                                console.log("err : ",err);
                             })
                             .then(text_response => {
                                 dirManager.updateStatus("myFriends", user_key, 0)
